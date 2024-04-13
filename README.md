@@ -2,7 +2,7 @@
 
 This project is a Fleet Manager application designed to help users efficiently manage their fleet of ships and trucks. It consists of three sub-projects:
 
-1. **Fleet.Api**: The backend API built using .NET Core and C#. It follows the vertical sliced architecture for improved organization and scalability.
+1. **Fleet.Api**: The backend API built using .NET Core and C#. It follows the **vertical sliced architecture** for improved organization and scalability.
 2. **Fleet.Api.Testing**: Unit tests for the Fleet.Api backend project to ensure its functionality.
 3. **Fleet.Api.Client**: Angular-based frontend to elegantly present the fleet's vehicles and their details through a web-based UI.
 
