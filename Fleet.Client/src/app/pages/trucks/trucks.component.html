@@ -1,0 +1,43 @@
+<button
+  nz-button
+  nzType="primary"
+  nz-icon="plus"
+  class="pull-right"
+  (click)="showCreateModal()"
+>
+  <span nz-icon nzType="plus" nzTheme="outline"></span>
+  Add
+</button>
+
+<nz-table #basicTable
+          [nzData]="trucks" [nzFrontPagination]="false" [nzLoading]="isLoading"
+          [nzScroll]="{ y: '475px' }">
+  <thead>
+  <tr>
+    <th colSpan="1">Name</th>
+    <th colSpan="1">Current Capacity</th>
+    <th colSpan="1">Loaded Containers</th>
+    <th colSpan="2"></th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let data of basicTable.data">
+    <td colSpan="1">{{ data.name }}</td>
+    <td colSpan="1">{{ data.currentCapacity }} / {{ data.maximumCapacity }}</td>
+    <td colSpan="1">{{ data.loadedContainersCommaSeparated }}</td>
+    <td colSpan="2">
+      <button [disabled]="data.currentCapacity === data.maximumCapacity"
+              nz-button (click)="showLoadModal(data.id)">
+        <span nz-icon nzType="login" nzTheme="outline"></span> Load</button>
+      <nz-divider nzType="vertical"></nz-divider>
+      <button [disabled]="data.currentCapacity === 0"
+              nz-button (click)="showUnloadModal(data.id)">
+        <span nz-icon nzType="logout" nzTheme="outline"></span> Unload</button>
+      <nz-divider nzType="vertical"></nz-divider>
+      <button [disabled]="data.currentCapacity === 0"
+              nz-button (click)="showTransferModal(data.id)">
+        <span nz-icon nzType="swap" nzTheme="outline"></span> Transfer</button>
+    </td>
+  </tr>
+  </tbody>
+</nz-table>

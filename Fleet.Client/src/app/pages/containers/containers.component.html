@@ -1,0 +1,25 @@
+<button
+  nz-button
+  nzType="primary"
+  nz-icon="plus"
+  class="pull-right"
+  (click)="showCreateModal()"
+>
+  <span nz-icon nzType="plus" nzTheme="outline"></span>
+  Add
+</button>
+
+<nz-table #basicTable
+          [nzData]="containers" [nzFrontPagination]="false" [nzLoading]="isLoading"
+          [nzScroll]="{ y: '475px' }">
+  <thead>
+  <tr>
+    <th>Name</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let data of basicTable.data">
+      <td>{{ data.name }}</td>
+  </tr>
+  </tbody>
+</nz-table>
