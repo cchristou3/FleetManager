@@ -22,7 +22,7 @@ Welcome to Fleet.Api, the backend API for managing a fleet of ships and trucks. 
    - `dotnet run`
 5. The API will be hosted locally on http://localhost:5000 and can be accessed using the specified endpoints.
 
-### Docker Deployment (In-progess)
+### Docker Deployment (In-progress)
 
 1. Clone this repository to your local machine.
 2. Navigate to the root directory of the Fleet.Api project.

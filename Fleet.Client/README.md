@@ -19,7 +19,7 @@ Welcome to Fleet.Client, the Angular-based frontend project for elegantly presen
 5. Once the build is complete, you can serve the application locally using: `ng serve`
 6. The application will be accessible at `http://localhost:4200`.
 
-### Docker Deployment
+### Docker Deployment (In-progress)
 
 1. Clone this repository to your local machine.
 2. Navigate to the root directory of the Fleet.Client project.
@@ -29,7 +29,7 @@ Welcome to Fleet.Client, the Angular-based frontend project for elegantly presen
 
 ## Contributing
 
-Contributions are welcome! Please see the CONTRIBUTING.md file for guidelines.
+Contributions are welcome! Please adhere with the project's conventions.
 
 ## License
 
