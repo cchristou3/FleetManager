@@ -21,7 +21,7 @@ The Fleet.Api backend has been implemented to fulfill the following requirements
 ## Project Structure
 
 - **Fleet.Api**:
-    - The backend API developed using .NET Core and C# with a vertical sliced architecture.
+    - The backend API developed using .NET Core and C# with a **vertical sliced architecture**.
     - Extensively documented using C#'s XML style comments and conventions.
     - Integrated with Swagger for API documentation.
     - Exposes a Postman collection for easy import and testing.
