@@ -38,6 +38,13 @@ The Fleet.Api backend has been implemented to fulfill the following requirements
 
 Both the Fleet.Api and the Fleet.Client have been containerized using Docker, enabling straightforward deployment and scalability.
 
+## How to Run the Projects
+
+1. Go to the root directory of the project (./FleetManagement)
+2. Run `./build-images.sh`(this will build the images of both the API and the SPA)
+3. Run `docker-compose up -d`
+4. Navigate to the browser and go to http://localhost:4200  
+
 ## Getting Started
 
 1. Clone the repository.
