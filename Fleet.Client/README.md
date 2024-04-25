@@ -14,18 +14,24 @@ Welcome to Fleet.Client, the Angular-based frontend project for elegantly presen
 
 1. Clone this repository to your local machine.
 2. Navigate to the root directory of the Fleet.Client project.
-3. Install the necessary dependencies by running: `npm install`
-4. Build the project by running: `ng build`
-5. Once the build is complete, you can serve the application locally using: `ng serve`
-6. The application will be accessible at `http://localhost:4200`.
+3. Install the necessary dependencies by running: 
+   - `npm install`
+4. Build the project by running: 
+   - `ng build`
+5. Once the build is complete, you can serve the application locally using: 
+   - `ng serve`
+6. The application will be accessible at:
+   - `http://localhost:4200`
 
 ### Docker Deployment (In-progress)
 
 1. Clone this repository to your local machine.
-2. Navigate to the root directory of the Fleet.Client project.
-3. Build a Docker image using the provided Dockerfile: `docker build -t fleet-client .`
-4. Once the image is built, deploy it to your local Docker environment: `docker run -d -p 8080:80 fleet-client`
-5. The application will be accessible at `http://localhost:8080`.
+2. Navigate to the root directory of the Fleet.Api project.
+3. Build a Docker image using the provided Dockerfile:
+   - `docker build -t fleet-client:v.1.0.0 .`
+4. Once the image is built, deploy it to your local Docker environment:
+   - `docker run -d --name fleet-client -p 4200:80 fleet-client:v.1.0.0`
+5. The API will be accessible at http://localhost:4200.
 
 ## Contributing
 

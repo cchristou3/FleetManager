@@ -1,1 +1,1 @@
-docker build -t fleet-client:1.0.0 .
+docker build -t fleet-client:v.1.0.0 .

@@ -27,10 +27,11 @@ Welcome to Fleet.Api, the backend API for managing a fleet of ships and trucks. 
 1. Clone this repository to your local machine.
 2. Navigate to the root directory of the Fleet.Api project.
 3. Build a Docker image using the provided Dockerfile:
-   - `docker build -t fleet-api .`
+   - `docker build -t fleet-api:v.1.0.0 .`
 4. Once the image is built, deploy it to your local Docker environment:
-   - `docker run -d -p 8080:80 fleet-api`
-5. The API will be accessible at `http://localhost:8080`.
+   - `docker run -d --name fleet-api -p 5000:8080 fleet-api:v.1.0.0`
+5. The API will be accessible at http://localhost:5000.
+6. To demonstrate the GET /Containers API open the following link in your browser http://localhost:5000/api/Containers
 
 ## Contributing
 
