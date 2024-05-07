@@ -22,6 +22,10 @@ RUN ng build --configuration production
 # Use a smaller, production-ready image as the final image
 FROM nginx:alpine
 
+# Copy the custom nginx configuration file to the container in the default
+# location
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # Copy the production-ready Angular app to the Nginx webserver's root directory
 COPY --from=build /app/dist/client /usr/share/nginx/html
 
