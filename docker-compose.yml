@@ -3,10 +3,14 @@ version: '3.8'
 services:
   fleet-api:
     image: fleet-api:v.1.0.0
+    build:
+      context: ./Fleet.Api
     ports:
       - "5000:8080"
   fleet-client:
     image: fleet-client:v.1.0.0
+    build:
+      context: ./Fleet.Client
     ports:
       - "4200:80"
     depends_on:

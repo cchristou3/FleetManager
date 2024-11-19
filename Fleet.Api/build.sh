@@ -1,1 +1,0 @@
-docker build -t fleet-api:v.1.0.0 .
