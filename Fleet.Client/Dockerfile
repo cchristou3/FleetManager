@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install Angular CLI globally
-RUN npm install -g @angular/cli
+RUN npm install -g @angular/cli@15.2.10
 
 # Install project dependencies
 RUN npm install
@@ -17,7 +17,7 @@ RUN npm install
 COPY . .
 
 # Build the Angular app for production
-RUN ng build --configuration production
+RUN ng build --configuration=production
 
 # Use a smaller, production-ready image as the final image
 FROM nginx:alpine
@@ -32,5 +32,8 @@ COPY --from=build /app/dist/client /usr/share/nginx/html
 # Expose port 80
 EXPOSE 80
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/entrypoint.sh", "nginx", "-g", "daemon off;"]

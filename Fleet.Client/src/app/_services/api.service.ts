@@ -13,7 +13,7 @@ import {LoadTruckRequest} from "../_requests/LoadTruckRequest";
 import {UnloadTruckRequest} from "../_requests/UnloadTruckRequest";
 import {TransferShipContainerRequest} from "../_requests/TransferShipContainerRequest";
 import {TransferTruckContainerRequest} from "../_requests/TransferTruckContainerRequest";
-import { environment } from '../environments/environment';
+import { environment } from 'src/environments/environment'
 
 @Injectable({
   providedIn: 'root'
