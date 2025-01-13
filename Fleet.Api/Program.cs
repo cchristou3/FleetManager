@@ -27,8 +27,10 @@ public class Program
         catch (Exception ex)
         {
             Console.WriteLine($"Migrations failed: {ex}");
+            throw;
         }
-
+        
+        Console.WriteLine("Server started working.");
         host.Run();
     }
 

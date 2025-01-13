@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Expose port 8080
 EXPOSE 8080
+EXPOSE 8081
 
 # Use the .NET SDK image for building and publishing the .NET Core API
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build

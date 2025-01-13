@@ -47,6 +47,10 @@ public class Startup(IWebHostEnvironment env)
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
+        // enforce HTTPS for prod environment
+        else app.UseHsts();
+        
+        app.UseHttpsRedirection();
 
         app.UseSwagger();
         app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"); });
