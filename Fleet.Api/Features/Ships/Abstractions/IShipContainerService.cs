@@ -13,9 +13,10 @@ public interface IShipContainerService
     /// </summary>
     /// <param name="shipId">The ship Id to have the provided container loaded.</param>
     /// <param name="request">The request containing container data.</param>
+    /// <param name="connectionId">The SignalR connection Id of the caller.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A result indicating the success regarding the load operation.</returns>
-    Task<Result<int>> Load(int shipId, LoadShipRequest request, CancellationToken ct);
+    Task<Result<int>> Load(int shipId, LoadShipRequest request, string connectionId, CancellationToken ct);
 
     /// <summary>
     ///     Unloads the provided container from an existing ship.

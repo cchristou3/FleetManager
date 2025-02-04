@@ -2,6 +2,7 @@ using AutoMapper;
 using Fleet.Api.Entities;
 using Fleet.Api.Errors;
 using Fleet.Api.Features.Containers.Abstractions;
+using Fleet.Api.Features.Real_time;
 using Fleet.Api.Features.Ships.Abstractions;
 using Fleet.Api.Features.Ships.DTOs;
 using Fleet.Api.Features.Ships.Implementations;
@@ -10,6 +11,7 @@ using Fleet.Api.Features.Trucks.DTOs;
 using Fleet.Api.Infrastructure;
 using Fleet.Api.Shared.Requests;
 using Fleet.Api.Testing.Extensions;
+using Microsoft.AspNetCore.SignalR;
 using Moq;
 
 namespace Fleet.Api.Testing;
@@ -22,6 +24,7 @@ public class ShipContainerServiceTests
     private readonly Mock<IShipRepository> _shipRepository;
     private readonly Mock<ITruckContainerRepository> _truckContainerRepository;
     private readonly Mock<IUnitOfWork> _unitOfWork;
+    private readonly Mock<IHubContext<ShipHub>> _shipHub;
 
     public ShipContainerServiceTests()
     {
@@ -31,12 +34,13 @@ public class ShipContainerServiceTests
         _unitOfWork = new Mock<IUnitOfWork>();
         _mapper = new Mock<IMapper>();
         _truckContainerRepository = new Mock<ITruckContainerRepository>();
+        _shipHub = new Mock<IHubContext<ShipHub>>();
     }
 
     private IShipContainerService GetShipContainerService()
     {
         return new ShipContainerService(_shipRepository.Object, _unitOfWork.Object, _containerRepository.Object,
-            _shipContainerRepository.Object, _truckContainerRepository.Object);
+            _shipContainerRepository.Object, _truckContainerRepository.Object, _shipHub.Object);
     }
 
     #region Load
@@ -54,7 +58,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Ship.NotFound);
@@ -77,7 +81,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => 2);
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Ship.IsFull);
@@ -104,7 +108,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Container.NotFound);
@@ -135,7 +139,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => new ShipContainer { ShipId = shipId });
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Container.LoadedInShip);
@@ -169,7 +173,7 @@ public class ShipContainerServiceTests
             .Returns(() => new GetTruckResponse());
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Container.LoadedInShip);
@@ -207,7 +211,7 @@ public class ShipContainerServiceTests
             .Returns(() => new GetTruckResponse());
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Container.LoadedInTruck);
@@ -242,7 +246,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Load(shipId, request, default);
+        var result = await service.Load(shipId, request, default, default);
 
         // Assert
         result.ShouldBeSuccess();

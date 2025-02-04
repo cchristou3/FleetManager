@@ -110,6 +110,7 @@ public class ShipsController : ControllerBase
     /// </summary>
     /// <param name="shipId">The Id of the ship to have the provided container loaded.</param>
     /// <param name="request">The request containing container data.</param>
+    /// <param name="headers">Custom header attributes.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="201">Returns the Id of the newly loaded container on the ship</response>
     /// <response code="400">
@@ -132,9 +133,10 @@ public class ShipsController : ControllerBase
     public async Task<IActionResult> Load(
         int shipId,
         LoadShipRequest request,
+        [FromHeader] Headers headers,
         CancellationToken ct)
     {
-        var result = await _shipContainerService.Load(shipId, request, ct);
+        var result = await _shipContainerService.Load(shipId, request, headers.ConnectionId, ct);
 
         return result.ToActionResult(this);
     }

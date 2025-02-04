@@ -3,12 +3,14 @@ using System.Threading.Tasks;
 using Fleet.Api.Entities;
 using Fleet.Api.Errors;
 using Fleet.Api.Features.Containers.Abstractions;
+using Fleet.Api.Features.Real_time;
 using Fleet.Api.Features.Ships.Abstractions;
 using Fleet.Api.Features.Ships.DTOs;
 using Fleet.Api.Features.Trucks.Abstractions;
 using Fleet.Api.Infrastructure;
 using Fleet.Api.Shared;
 using Fleet.Api.Shared.Requests;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Fleet.Api.Features.Ships.Implementations;
 
@@ -22,6 +24,8 @@ public class ShipContainerService : IShipContainerService
     private readonly IShipRepository _shipRepository;
     private readonly ITruckContainerRepository _truckContainerRepository;
     private readonly IUnitOfWork _unitOfWork;
+    
+    private readonly IHubContext<ShipHub> _hubContext;
 
     /// <summary>
     ///     Initializes a new instance of the ShipService class.
@@ -30,16 +34,19 @@ public class ShipContainerService : IShipContainerService
     /// <param name="unitOfWork">Unit of Work for managing transactions.</param>
     /// <param name="containerRepository">Repository for container data access.</param>
     /// <param name="shipContainerRepository">Repository for ship container data access.</param>
+    /// <param name="truckContainerRepository">Repository for truck container data access.</param>
+    /// <param name="hubContext">Context for real time communication with clients.</param>
     public ShipContainerService(
         IShipRepository shipRepository, IUnitOfWork unitOfWork,
         IContainerRepository containerRepository, IShipContainerRepository shipContainerRepository,
-        ITruckContainerRepository truckContainerRepository)
+        ITruckContainerRepository truckContainerRepository, IHubContext<ShipHub> hubContext)
     {
         _shipRepository = shipRepository;
         _unitOfWork = unitOfWork;
         _containerRepository = containerRepository;
         _shipContainerRepository = shipContainerRepository;
         _truckContainerRepository = truckContainerRepository;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -47,19 +54,22 @@ public class ShipContainerService : IShipContainerService
     /// </summary>
     /// <param name="shipId">The Id of the ship to have the provided container loaded.</param>
     /// <param name="request">The request containing container data.</param>
+    /// <param name="connectionId">The SignalR connection Id of the caller.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A result indicating the success regarding the load operation.</returns>
-    public async Task<Result<int>> Load(int shipId, LoadShipRequest request, CancellationToken ct)
+    public async Task<Result<int>> Load(int shipId, LoadShipRequest request, string connectionId, CancellationToken ct)
     {
         // TODO: Potential race conditions: add locks to ensure thread safety
         var validationResult = await ValidateLoadRequest(shipId, request, ct);
 
-        if (validationResult.HasFailed) return validationResult;
+        if (validationResult.HasFailed) return validationResult.ToResult<int>();
 
         var shipContainer = ShipContainer.Create(shipId, request);
 
         await _shipContainerRepository.Create(shipContainer, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        
+        await NotifyShipHasBeenLoaded(shipId, validationResult.Value, connectionId, ct);
 
         return Result<int>.Success(shipContainer.Id);
     }
@@ -139,32 +149,32 @@ public class ShipContainerService : IShipContainerService
     /// <param name="request">The request containing container data.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A result indicating the success or failure of the validation.</returns>
-    private async Task<Result<int>> ValidateLoadRequest(int shipId, LoadShipRequest request,
+    private async Task<Result<Container>> ValidateLoadRequest(int shipId, LoadShipRequest request,
         CancellationToken ct = default)
     {
         var ship = await _shipRepository.Get(shipId, false, ct);
 
         if (ship is null)
-            return Result<int>.Failure(DomainErrors.Ship.NotFound);
+            return Result<Container>.Failure(DomainErrors.Ship.NotFound);
 
         var numberOfShipContainers = await _shipContainerRepository.CountContainersByShipId(shipId, ct);
 
         if (ship.IsFull(numberOfShipContainers))
-            return Result<int>.Failure(DomainErrors.Ship.IsFull);
+            return Result<Container>.Failure(DomainErrors.Ship.IsFull);
 
         var container = await _containerRepository.Get(request.ContainerId, false, ct);
 
         if (container is null)
-            return Result<int>.Failure(DomainErrors.Container.NotFound);
+            return Result<Container>.Failure(DomainErrors.Container.NotFound);
 
         var truckContainer = await _truckContainerRepository.Get(request.ContainerId, false, ct);
         if (truckContainer != null)
-            return Result<int>.Failure(DomainErrors.Container.LoadedInTruck);
+            return Result<Container>.Failure(DomainErrors.Container.LoadedInTruck);
 
         var shipContainer = await _shipContainerRepository.Get(request.ContainerId, false, ct);
-        if (shipContainer != null) return Result<int>.Failure(DomainErrors.Container.LoadedInShip);
+        if (shipContainer != null) return Result<Container>.Failure(DomainErrors.Container.LoadedInShip);
 
-        return Result<int>.Success();
+        return Result<Container>.Success(container);
     }
 
     /// <summary>
@@ -186,5 +196,12 @@ public class ShipContainerService : IShipContainerService
             return Result<int>.Failure(DomainErrors.ShipContainer.LoadedInAnotherShip);
 
         return Result<int>.Success();
+    }
+    
+    private Task NotifyShipHasBeenLoaded(int shipId, Container container, string connectionId, CancellationToken ct)
+    {
+        return _hubContext.Clients
+            .AllExcept(connectionId)
+            .SendAsync(nameof(ClientMethods.ShipLoaded), new OnShipLoadedEvent(shipId, container), ct);
     }
 }

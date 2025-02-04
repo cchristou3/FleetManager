@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {catchError, firstValueFrom, map, Observable, of} from "rxjs";
 import {Container} from "../_models/container";
 import {CreateContainerRequest} from "../_requests/CreateContainerRequest";
@@ -72,10 +72,16 @@ export class ApiService {
 
   loadShip(
     shipId: number,
-    request: LoadShipRequest
+    request: LoadShipRequest,
+    connectionId: string,
   ) : Promise<Object> {
+
+    const headers = new HttpHeaders({
+      'X-Connection-Id': connectionId
+    });
+
     return firstValueFrom(this.http
-      .post(`${this.apiUrl}/Ships/${shipId}/load`, request))
+      .post(`${this.apiUrl}/Ships/${shipId}/load`, request, { headers }))
   }
 
   unloadShip(

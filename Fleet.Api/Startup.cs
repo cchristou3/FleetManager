@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Reflection;
 using Fleet.Api.Extensions;
+using Fleet.Api.Features.Real_time;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +22,8 @@ public class Startup(IWebHostEnvironment env)
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
             .AddJsonFile($"appsettings.{env.EnvironmentName}.json")
             .Build();
+
+        services.AddSignalR();
 
         services.AddCors();
 
@@ -54,7 +56,7 @@ public class Startup(IWebHostEnvironment env)
 
         app.UseSwagger();
         app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"); });
-
+        
         app.UseRouting();
 
         app.UseCors(x =>
@@ -67,7 +69,7 @@ public class Startup(IWebHostEnvironment env)
         {
             endpoints.MapControllers();
 
-            endpoints.MapGet("/", async context => { await context.Response.WriteAsync("Hello World!"); });
+            endpoints.MapHub<ShipHub>("hubs/ships");
         });
     }
 }

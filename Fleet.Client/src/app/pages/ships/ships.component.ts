@@ -1,37 +1,48 @@
-import {Component, OnInit, ViewContainerRef} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewContainerRef} from '@angular/core';
 import {NzMessageService} from "ng-zorro-antd/message";
 import {NzModalService} from "ng-zorro-antd/modal";
 import {ApiService} from "../../_services/api.service";
-import {firstValueFrom} from "rxjs";
+import {Subscription} from "rxjs";
 import {Ship} from "../../_models/ship";
 import {CreateShipFormComponent} from "../../_forms/create-form/create-ship-form.component";
 import {NzSafeAny} from "ng-zorro-antd/core/types";
 import {LoadShipFormComponent} from "../../_forms/load-form/load-ship-form.component";
 import {UnloadShipFormComponent} from "../../_forms/unload-form/unload-ship-form.component";
 import {Container} from "../../_models/container";
-import {ContainerOutline} from "@ant-design/icons-angular/icons";
 import {TransferShipContainerFormComponent} from "../../_forms/transfer-form/transfer-ship-container-form.component";
+import {ShipService} from "../../_services/hubs/ship.service";
+import {OnShipLoadedEvent} from "../../_models/onShipLoadedEvent";
 
 @Component({
   selector: 'app-ships',
   templateUrl: './ships.component.html',
   styleUrls: ['./ships.component.css']
 })
-export class ShipsComponent implements OnInit {
+export class ShipsComponent implements OnInit, OnDestroy {
   ships: Ship[] = [];
 
   isLoading = false
+  subscription?: Subscription;
 
   constructor(private message: NzMessageService,
               private modal: NzModalService,
               private viewContainerRef: ViewContainerRef,
-              private apiService: ApiService) {
+              private apiService: ApiService,
+              private shipService: ShipService) {
+    this.onShipLoaded = this.onShipLoaded.bind(this);
   }
 
   async ngOnInit() {
     this.isLoading = true;
     this.ships = await this.apiService.getShips(1, 1000);
     this.isLoading = false;
+    this.shipService.createHubConnection()
+    this.subscription = this.shipService.onShipLoaded$.subscribe(this.onShipLoaded)
+  }
+
+  ngOnDestroy(){
+    this.shipService.stopHubConnection()
+    this.subscription?.unsubscribe()
   }
 
   showCreateModal(): void {
@@ -94,9 +105,9 @@ export class ShipsComponent implements OnInit {
 
             const request = componentInstance.prepareForApi();
             await this.apiService
-              .loadShip(shipId, request)
+              .loadShip(shipId, request, this.shipService.hubConnectionId)
               .then(_ => {
-                const loadedShip = this.getShip(shipId);
+                const loadedShip = this.getShip(shipId)!;
                 const selectedContainer = componentInstance.getSelectedContainer();
 
                 this.message.create('success',
@@ -141,7 +152,7 @@ export class ShipsComponent implements OnInit {
               .unloadShip(shipId, request)
               .then(_ => {
                 const selectedContainer = componentInstance.getSelectedContainer();
-                const loadedShip = this.getShip(shipId);
+                const loadedShip = this.getShip(shipId)!;
                 this.message.create('success',
                   `The container [${selectedContainer.name}] has been unloaded from ship [${loadedShip.name}]!`);
                 this.onContainerUnloaded(loadedShip, selectedContainer);
@@ -186,13 +197,13 @@ export class ShipsComponent implements OnInit {
             await this.apiService
               .transferShipContainer(sourceShipId, destinationShipId, request)
               .then(_ => {
-                const sourceShip = this.getShip(sourceShipId);
-                const destinationShip = this.getShip(destinationShipId);
+                const sourceShip = this.getShip(sourceShipId)!;
+                const destinationShip = this.getShip(destinationShipId)!;
                 const selectedContainer = componentInstance.getSelectedContainer();
 
                 this.onContainerUnloaded(sourceShip, selectedContainer);
                 this.onContainerLoaded(destinationShip, selectedContainer);
-                
+
                 modal.destroy();
               })
               .catch(e => {
@@ -220,11 +231,20 @@ export class ShipsComponent implements OnInit {
     loadedShip.addContainer(container);
   }
 
-  private getShip(shipId: number): Ship {
-    return this.ships.find(x => x.id === shipId)!;
+  private getShip(shipId: number): Ship | undefined {
+    return this.ships.find(x => x.id === shipId);
   }
 
   private onContainerUnloaded(loadedShip: Ship, container: Container) {
     loadedShip.removeContainer(container);
+  }
+
+  private async onShipLoaded(data: OnShipLoadedEvent) {
+    const loadedShip = this.getShip(data.shipId)!
+
+    this.message.create('success',
+      `The container [${data.loadedContainer.name}] has been loaded to ship [${loadedShip.name}]!`);
+
+    this.onContainerLoaded(loadedShip, data.loadedContainer);
   }
 }
