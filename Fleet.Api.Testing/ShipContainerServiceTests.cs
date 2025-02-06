@@ -245,6 +245,23 @@ public class ShipContainerServiceTests
                 It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => null);
 
+        var clientProxy = new Mock<IClientProxy>();
+        var clients = new Mock<IHubClients>();
+    
+        // We cannot mock extension methods so here we instead mock the method belonging
+        // to the type that the extension method calls.
+        clientProxy.Setup(x => 
+            x.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()));
+        
+        // Here we mock the underlying method as well.
+        // E.g.,    from:   x.AllExcept(this IHubClients<T> hubClients, string excludedConnectionId)
+        //          to:     hubClients.AllExcept(IReadOnlyList<string> excludedConnectionIds)
+        clients.Setup(x => x.AllExcept(It.IsAny<string[]>()))
+            .Returns(() => clientProxy.Object);
+        
+        _shipHub.Setup(x => x.Clients)
+            .Returns(() => clients.Object);
+
         // Act
         var result = await service.Load(shipId, request, default, default);
 
