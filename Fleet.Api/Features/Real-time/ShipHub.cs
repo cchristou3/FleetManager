@@ -6,7 +6,8 @@ namespace Fleet.Api.Features.Real_time;
 
 public enum ClientMethods
 {
-    ShipLoaded
+    ShipLoaded,
+    ShipUnloaded
 }
 
 public class ShipHub : Hub

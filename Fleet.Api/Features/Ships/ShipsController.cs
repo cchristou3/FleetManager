@@ -146,6 +146,7 @@ public class ShipsController : ControllerBase
     /// </summary>
     /// <param name="shipId">The Id of the ship to unload the provided container from.</param>
     /// <param name="request">The request containing container data.</param>
+    /// <param name="headers">Custom header attributes.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="200">Returns a success response upon successful unloading.</response>
     /// <response code="400">
@@ -167,9 +168,10 @@ public class ShipsController : ControllerBase
     public async Task<IActionResult> Unload(
         int shipId,
         UnloadShipRequest request,
+        [FromHeader] Headers headers,
         CancellationToken ct)
     {
-        var result = await _shipContainerService.Unload(shipId, request, ct);
+        var result = await _shipContainerService.Unload(shipId, request, headers.ConnectionId, ct);
 
         return result.ToActionResult(this);
     }

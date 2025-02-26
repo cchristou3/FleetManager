@@ -23,9 +23,10 @@ public interface IShipContainerService
     /// </summary>
     /// <param name="shipId">The ship Id to have the provided container unloaded.</param>
     /// <param name="request">The request containing container data.</param>
+    /// <param name="connectionId">The SignalR connection Id of the caller.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A result indicating the success regarding the unload operation.</returns>
-    Task<Result<int>> Unload(int shipId, UnloadShipRequest request, CancellationToken ct);
+    Task<Result<int>> Unload(int shipId, UnloadShipRequest request, string connectionId, CancellationToken ct);
 
     /// <summary>
     ///     Transfers a container from one ship to another.

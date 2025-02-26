@@ -69,12 +69,12 @@ public class ShipContainerService : IShipContainerService
         await _shipContainerRepository.Create(shipContainer, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         
-        await NotifyShipHasBeenLoaded(shipId, validationResult.Value, connectionId, ct);
+        await NotifyContainerLoadedToShip(shipId, validationResult.Value, connectionId, ct);
 
         return Result<int>.Success(shipContainer.Id);
     }
 
-    public async Task<Result<int>> Unload(int shipId, UnloadShipRequest request, CancellationToken ct)
+    public async Task<Result<int>> Unload(int shipId, UnloadShipRequest request, string connectionId, CancellationToken ct)
     {
         var validationResult = await ValidateUnloadRequest(shipId, request, ct);
 
@@ -85,6 +85,8 @@ public class ShipContainerService : IShipContainerService
         _shipContainerRepository.Remove(shipContainer);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        
+        await NotifyContainerUnloadedFromShip(shipId, request.ContainerId, connectionId, ct);
 
         return Result<int>.Success();
     }
@@ -198,10 +200,19 @@ public class ShipContainerService : IShipContainerService
         return Result<int>.Success();
     }
     
-    private Task NotifyShipHasBeenLoaded(int shipId, Container container, string connectionId, CancellationToken ct)
+    private Task NotifyContainerLoadedToShip(int shipId, Container container, string connectionId, CancellationToken ct)
     {
         return _hubContext.Clients
             .AllExcept(connectionId)
             .SendAsync(nameof(ClientMethods.ShipLoaded), new OnShipLoadedEvent(shipId, container), ct);
+    }
+    
+    private async Task NotifyContainerUnloadedFromShip(int shipId, int containerId, string connectionId, CancellationToken ct)
+    {
+        var container = await _containerRepository.Get(containerId, false, ct);
+        
+        await _hubContext.Clients
+            .AllExcept(connectionId)
+            .SendAsync(nameof(ClientMethods.ShipUnloaded), new OnShipUnloadedEvent(shipId, container), ct);
     }
 }
