@@ -286,7 +286,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Unload(shipId, request, default);
+        var result = await service.Unload(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Container.NotLoaded);
@@ -305,7 +305,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => new ShipContainer { ShipId = 2 });
 
         // Act
-        var result = await service.Unload(shipId, request, default);
+        var result = await service.Unload(shipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.ShipContainer.LoadedInAnotherShip);
@@ -322,9 +322,30 @@ public class ShipContainerServiceTests
         _shipContainerRepository.Setup(x => x.Get(
                 It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new ShipContainer { ShipId = 1 });
+        
+        _containerRepository.Setup(x => x.Get(
+                It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new Container { Id = 1, Name = "Pambos"});
+        
+        var clientProxy = new Mock<IClientProxy>();
+        var clients = new Mock<IHubClients>();
+        
+        // We cannot mock extension methods so here we instead mock the method belonging
+        // to the type that the extension method calls.
+        clientProxy.Setup(x => 
+            x.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()));
+        
+        // Here we mock the underlying method as well.
+        // E.g.,    from:   x.AllExcept(this IHubClients<T> hubClients, string excludedConnectionId)
+        //          to:     hubClients.AllExcept(IReadOnlyList<string> excludedConnectionIds)
+        clients.Setup(x => x.AllExcept(It.IsAny<string[]>()))
+            .Returns(() => clientProxy.Object);
+        
+        _shipHub.Setup(x => x.Clients)
+            .Returns(() => clients.Object);
 
         // Act
-        var result = await service.Unload(shipId, request, default);
+        var result = await service.Unload(shipId, request, default, default);
 
         // Assert
         result.ShouldBeSuccess();
@@ -512,7 +533,7 @@ public class ShipContainerServiceTests
 
     [Fact]
     public async Task
-        Transfer_ShouldReturnSuccessResult_WhenBothShipsExistAndSourceShipHasTheContianerAndDestinationShipIsNotFull()
+        Transfer_ShouldReturnSuccessResult_WhenBothShipsExistAndSourceShipHasTheContainerAndDestinationShipIsNotFull()
     {
         // Arrange
         var sourceShipId = 1;
