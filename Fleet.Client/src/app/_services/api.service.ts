@@ -86,10 +86,16 @@ export class ApiService {
 
   unloadShip(
     shipId: number,
-    request: UnloadShipRequest
+    request: UnloadShipRequest,
+    connectionId: string,
   ) : Promise<Object> {
+
+    const headers = new HttpHeaders({
+      'X-Connection-Id': connectionId
+    });
+
     return firstValueFrom(this.http
-      .post(`${this.apiUrl}/Ships/${shipId}/unload`, request))
+      .post(`${this.apiUrl}/Ships/${shipId}/unload`, request, { headers }))
   }
 
   transferShipContainer(

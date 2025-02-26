@@ -5,6 +5,6 @@ export interface OnShipLoadedEvent {
   loadedContainer: Container;
 }
 
-export function emptyEvent(): OnShipLoadedEvent{
+export function emptyShipLoadedEvent(): OnShipLoadedEvent{
   return { shipId: -1, loadedContainer: { id: -1, name: '' } }
 }
