@@ -49,14 +49,6 @@ public class ShipContainerService : IShipContainerService
         _hubContext = hubContext;
     }
 
-    /// <summary>
-    ///     Loads an existing ship with the provided container.
-    /// </summary>
-    /// <param name="shipId">The Id of the ship to have the provided container loaded.</param>
-    /// <param name="request">The request containing container data.</param>
-    /// <param name="connectionId">The SignalR connection Id of the caller.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>A result indicating the success regarding the load operation.</returns>
     public async Task<Result<int>> Load(int shipId, LoadShipRequest request, string connectionId, CancellationToken ct)
     {
         // TODO: Potential race conditions: add locks to ensure thread safety
@@ -91,7 +83,7 @@ public class ShipContainerService : IShipContainerService
         return Result<int>.Success();
     }
 
-    public async Task<Result<int>> Transfer(int sourceShipId, int destinationShipId, TransferContainerRequest request,
+    public async Task<Result<int>> Transfer(int sourceShipId, int destinationShipId, TransferContainerRequest request, string connectionId,
         CancellationToken ct)
     {
         // TODO: Potential race conditions: add locks to ensure thread safety
@@ -104,6 +96,8 @@ public class ShipContainerService : IShipContainerService
         shipContainer.ShipId = destinationShipId;
 
         await _unitOfWork.SaveChangesAsync(ct);
+
+        await NotifyContainerTransferredToAnotherShip(sourceShipId, destinationShipId, request.ContainerId, connectionId, ct);
 
         return Result<int>.Success(shipContainer.Id);
     }
@@ -214,5 +208,14 @@ public class ShipContainerService : IShipContainerService
         await _hubContext.Clients
             .AllExcept(connectionId)
             .SendAsync(nameof(ClientMethods.ShipUnloaded), new OnShipUnloadedEvent(shipId, container), ct);
+    }
+    
+    private async Task NotifyContainerTransferredToAnotherShip(int sourceShipId, int destinationShipId, int containerId, string connectionId, CancellationToken ct)
+    {
+        var container = await _containerRepository.Get(containerId, false, ct);
+        
+        await _hubContext.Clients
+            .AllExcept(connectionId)
+            .SendAsync(nameof(ClientMethods.ContainerTransferred), new OnContainerTransferredEvent(sourceShipId, destinationShipId, container), ct);
     }
 }

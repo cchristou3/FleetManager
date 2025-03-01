@@ -1,10 +1,9 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import {HubService} from "./hub.service";
-import {Ship} from "../../_models/ship";
 import {emptyShipLoadedEvent, OnShipLoadedEvent} from "../../_models/onShipLoadedEvent";
 import {emptyShipUnloadedEvent, OnShipUnloadedEvent} from "../../_models/onShipUnloadedEvent";
+import {emptyContainerTransferredEvent, onContainerTransferredEvent} from "../../_models/onContainerTransferredEvent";
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +15,9 @@ export class ShipService extends HubService {
   private onShipUnloadedSource = new BehaviorSubject<OnShipUnloadedEvent>(emptyShipUnloadedEvent());
   onShipUnloaded$ = this.onShipUnloadedSource.asObservable();
 
+  private onContainerTransferredSource = new BehaviorSubject<onContainerTransferredEvent>(emptyContainerTransferredEvent());
+  onContainerTransferred$ = this.onContainerTransferredSource.asObservable();
+
   override createHubConnection() {
     console.log('createHubConnection')
     super.createHubConnection(`ships`);
@@ -26,6 +28,10 @@ export class ShipService extends HubService {
 
     this.hubConnection.on('ShipUnloaded', data => {
       this.onShipUnloadedSource.next(data);
+    });
+
+    this.hubConnection.on('ContainerTransferred', data => {
+      this.onContainerTransferredSource.next(data);
     });
   }
 }
