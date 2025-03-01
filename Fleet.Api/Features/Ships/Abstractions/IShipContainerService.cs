@@ -36,6 +36,6 @@ public interface IShipContainerService
     /// <param name="request">The request containing container data.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A result indicating the success regarding the load operation.</returns>
-    Task<Result<int>> Transfer(int sourceShipId, int destinationShipId, TransferContainerRequest request,
+    Task<Result<int>> Transfer(int sourceShipId, int destinationShipId, TransferContainerRequest request, string connectionId,
         CancellationToken ct);
 }

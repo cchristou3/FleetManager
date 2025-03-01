@@ -26,6 +26,26 @@ public class ShipContainerServiceTests
     private readonly Mock<IUnitOfWork> _unitOfWork;
     private readonly Mock<IHubContext<ShipHub>> _shipHub;
 
+    private void ArrangeShipHub()
+    {
+        var clientProxy = new Mock<IClientProxy>();
+        var clients = new Mock<IHubClients>();
+        
+        // We cannot mock extension methods so here we instead mock the method belonging
+        // to the type that the extension method calls.
+        clientProxy.Setup(x => 
+            x.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()));
+        
+        // Here we mock the underlying method as well.
+        // E.g.,    from:   x.AllExcept(this IHubClients<T> hubClients, string excludedConnectionId)
+        //          to:     hubClients.AllExcept(IReadOnlyList<string> excludedConnectionIds)
+        clients.Setup(x => x.AllExcept(It.IsAny<string[]>()))
+            .Returns(() => clientProxy.Object);
+        
+        _shipHub.Setup(x => x.Clients)
+            .Returns(() => clients.Object);
+    }
+
     public ShipContainerServiceTests()
     {
         _shipContainerRepository = new Mock<IShipContainerRepository>();
@@ -245,22 +265,7 @@ public class ShipContainerServiceTests
                 It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => null);
 
-        var clientProxy = new Mock<IClientProxy>();
-        var clients = new Mock<IHubClients>();
-    
-        // We cannot mock extension methods so here we instead mock the method belonging
-        // to the type that the extension method calls.
-        clientProxy.Setup(x => 
-            x.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()));
-        
-        // Here we mock the underlying method as well.
-        // E.g.,    from:   x.AllExcept(this IHubClients<T> hubClients, string excludedConnectionId)
-        //          to:     hubClients.AllExcept(IReadOnlyList<string> excludedConnectionIds)
-        clients.Setup(x => x.AllExcept(It.IsAny<string[]>()))
-            .Returns(() => clientProxy.Object);
-        
-        _shipHub.Setup(x => x.Clients)
-            .Returns(() => clients.Object);
+        ArrangeShipHub();
 
         // Act
         var result = await service.Load(shipId, request, default, default);
@@ -327,22 +332,7 @@ public class ShipContainerServiceTests
                 It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new Container { Id = 1, Name = "Pambos"});
         
-        var clientProxy = new Mock<IClientProxy>();
-        var clients = new Mock<IHubClients>();
-        
-        // We cannot mock extension methods so here we instead mock the method belonging
-        // to the type that the extension method calls.
-        clientProxy.Setup(x => 
-            x.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()));
-        
-        // Here we mock the underlying method as well.
-        // E.g.,    from:   x.AllExcept(this IHubClients<T> hubClients, string excludedConnectionId)
-        //          to:     hubClients.AllExcept(IReadOnlyList<string> excludedConnectionIds)
-        clients.Setup(x => x.AllExcept(It.IsAny<string[]>()))
-            .Returns(() => clientProxy.Object);
-        
-        _shipHub.Setup(x => x.Clients)
-            .Returns(() => clients.Object);
+        ArrangeShipHub();
 
         // Act
         var result = await service.Unload(shipId, request, default, default);
@@ -365,7 +355,7 @@ public class ShipContainerServiceTests
         var service = GetShipContainerService();
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.ShipContainer.DestinationShipCannotBeSameAsSourceShip);
@@ -385,7 +375,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Ship.SourceShipNotFound);
@@ -409,7 +399,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Ship.DestinationShipNotFound);
@@ -437,7 +427,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => null);
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Container.NotFound);
@@ -465,7 +455,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => new ShipContainer { ShipId = 10 });
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.ShipContainer.NotInSource);
@@ -493,7 +483,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => new ShipContainer { ShipId = destinationShipId });
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.ShipContainer.AlreadyInDestination);
@@ -525,7 +515,7 @@ public class ShipContainerServiceTests
             .ReturnsAsync(() => 2);
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeThisFailure(DomainErrors.Ship.DestinationShipIsFull);
@@ -556,9 +546,15 @@ public class ShipContainerServiceTests
         _shipContainerRepository.Setup(x => x.CountContainersByShipId(
                 It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => 1);
+        
+        _containerRepository.Setup(x => x.Get(
+                It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new Container { Id = 1, Name = "Pambos"});
+        
+        ArrangeShipHub();
 
         // Act
-        var result = await service.Transfer(sourceShipId, destinationShipId, request, default);
+        var result = await service.Transfer(sourceShipId, destinationShipId, request, default, default);
 
         // Assert
         result.ShouldBeSuccess();

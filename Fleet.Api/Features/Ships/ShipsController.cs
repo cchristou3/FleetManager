@@ -182,6 +182,7 @@ public class ShipsController : ControllerBase
     /// <param name="sourceShipId">The Id of the source ship.</param>
     /// <param name="destinationShipId">The Id of the destination ship.</param>
     /// <param name="request">The request containing container data.</param>
+    /// <param name="headers">Custom header attributes.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="201">Returns the Id of the newly transferred container on the destination ship</response>
     /// <response code="400">
@@ -207,9 +208,10 @@ public class ShipsController : ControllerBase
         int sourceShipId,
         int destinationShipId,
         TransferContainerRequest request,
+        [FromHeader] Headers headers,
         CancellationToken ct)
     {
-        var result = await _shipContainerService.Transfer(sourceShipId, destinationShipId, request, ct);
+        var result = await _shipContainerService.Transfer(sourceShipId, destinationShipId, request, headers.ConnectionId, ct);
 
         return result.ToActionResult(this);
     }

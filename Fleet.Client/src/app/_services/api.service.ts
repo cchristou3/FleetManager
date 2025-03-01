@@ -101,10 +101,16 @@ export class ApiService {
   transferShipContainer(
     sourceShipId: number,
     destinationShipId: number,
-    request: TransferShipContainerRequest
+    request: TransferShipContainerRequest,
+    connectionId: string,
   ) : Promise<Object> {
+
+    const headers = new HttpHeaders({
+      'X-Connection-Id': connectionId
+    });
+
     return firstValueFrom(this.http
-      .post(`${this.apiUrl}/Ships/${sourceShipId}/transfer/${destinationShipId}`, request))
+      .post(`${this.apiUrl}/Ships/${sourceShipId}/transfer/${destinationShipId}`, request, { headers }))
   }
 
   getTrucks(

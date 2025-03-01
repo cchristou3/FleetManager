@@ -13,6 +13,7 @@ import {TransferShipContainerFormComponent} from "../../_forms/transfer-form/tra
 import {ShipService} from "../../_services/hubs/ship.service";
 import {OnShipLoadedEvent} from "../../_models/onShipLoadedEvent";
 import {OnShipUnloadedEvent} from "../../_models/onShipUnloadedEvent";
+import {onContainerTransferredEvent} from "../../_models/onContainerTransferredEvent";
 
 @Component({
   selector: 'app-ships',
@@ -32,6 +33,7 @@ export class ShipsComponent implements OnInit, OnDestroy {
               private shipService: ShipService) {
     this.onShipLoaded = this.onShipLoaded.bind(this);
     this.onShipUnloaded = this.onShipUnloaded.bind(this);
+    this.onContainerTransferred = this.onContainerTransferred.bind(this);
   }
 
   async ngOnInit() {
@@ -41,6 +43,7 @@ export class ShipsComponent implements OnInit, OnDestroy {
     this.shipService.createHubConnection()
     this.subscriptions.push(this.shipService.onShipLoaded$.subscribe(this.onShipLoaded));
     this.subscriptions.push(this.shipService.onShipUnloaded$.subscribe(this.onShipUnloaded));
+    this.subscriptions.push(this.shipService.onContainerTransferred$.subscribe(this.onContainerTransferred));
   }
 
   ngOnDestroy(){
@@ -199,7 +202,7 @@ export class ShipsComponent implements OnInit, OnDestroy {
             const destinationShipId = componentInstance.getSelectedDestinationShipId();
             const request = componentInstance.prepareForApi();
             await this.apiService
-              .transferShipContainer(sourceShipId, destinationShipId, request)
+              .transferShipContainer(sourceShipId, destinationShipId, request, this.shipService.hubConnectionId)
               .then(_ => {
                 const sourceShip = this.getShip(sourceShipId)!;
                 const destinationShip = this.getShip(destinationShipId)!;
@@ -263,5 +266,16 @@ export class ShipsComponent implements OnInit, OnDestroy {
       `The container [${data.unloadedContainer.name}] has been unloaded from ship [${loadedShip.name}]!`);
 
     this.onContainerUnloaded(loadedShip, data.unloadedContainer);
+  }
+
+  private async onContainerTransferred(data: onContainerTransferredEvent) {
+    const sourceShip = this.getShip(data.sourceShipId);
+    const destinationShip = this.getShip(data.destinationShipId);
+
+    if (sourceShip)
+      this.onContainerUnloaded(sourceShip, data.selectedContainer);
+
+    if (destinationShip)
+      this.onContainerLoaded(destinationShip, data.selectedContainer);
   }
 }
