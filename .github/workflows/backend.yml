@@ -1,0 +1,36 @@
+name: Backend CI/CD
+
+on:
+  push:
+    paths:
+      - 'FleetManagement/Fleet.Api/**'
+      - '.github/workflows/Fleet.Api.yml'
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'FleetManagement/Fleet.Api/**'
+      - '.github/workflows/Fleet.Api.yml'
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.100
+
+      - name: Restore dependencies
+        run: dotnet restore FleetManagement/Fleet.Api
+
+      - name: Build
+        run: dotnet build FleetManagement/Fleet.Api --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test FleetManagement/Fleet.Api --no-restore --verbosity normal --no-build

@@ -1,0 +1,8 @@
+{
+  "name": "parent",
+  "version": "0.0.0",
+  "scripts": {
+    "f": "[ \"$(basename $PWD)\" = \"Fleet.Client\" ] && ng serve || (cd Fleet.Client && ng serve)",
+    "b": "[ \"$(basename $PWD)\" = \"Fleet.Api\" ] && dotnet watch run || (cd Fleet.Api && dotnet watch run)"
+  }
+}
