@@ -28,10 +28,10 @@ jobs:
           dotnet-version: 8.0.100
 
       - name: Restore dependencies
-        run: dotnet restore FleetManagement/Fleet.Api
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build FleetManagement/Fleet.Api --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test FleetManagement/Fleet.Api --no-restore --verbosity normal --no-build
+        run: dotnet test --no-restore --verbosity normal --no-build
