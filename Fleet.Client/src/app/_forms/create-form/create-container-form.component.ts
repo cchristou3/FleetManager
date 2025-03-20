@@ -38,7 +38,7 @@ export class CreateContainerFormComponent {
     name: ['', [Validators.required]],
   });
 
-  validateForm() {
+  isValid() {
     if (this.createForm.valid)
       return true;
 

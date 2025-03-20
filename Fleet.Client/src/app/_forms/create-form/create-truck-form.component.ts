@@ -50,7 +50,7 @@ export class CreateTruckFormComponent {
     capacity: [1, [Validators.required]],
   });
 
-  validateForm() {
+  isValid() {
     if (this.createForm.valid)
       return true;
 

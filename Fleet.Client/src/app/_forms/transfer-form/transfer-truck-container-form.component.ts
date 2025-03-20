@@ -88,7 +88,7 @@ export class TransferTruckContainerFormComponent {
     this.transferForm.controls.containerName.setValue(this.latestLoadedContainer.name);
   }
 
-  validateForm() {
+  isValid() {
     if (this.transferForm.valid)
       return true;
 

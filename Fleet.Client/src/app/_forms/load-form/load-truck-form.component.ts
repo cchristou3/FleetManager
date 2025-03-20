@@ -71,7 +71,7 @@ export class LoadTruckFormComponent {
     this.isLoading = false;
   }
 
-  validateForm() {
+  isValid() {
     if (this.loadForm.valid)
       return true;
 
