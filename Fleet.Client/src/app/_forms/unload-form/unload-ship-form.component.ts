@@ -71,7 +71,7 @@ export class UnloadShipFormComponent {
     this.listOfOption = this.inputData;
   }
 
-  validateForm() {
+  isValid() {
     if (this.unloadForm.valid)
       return true;
 

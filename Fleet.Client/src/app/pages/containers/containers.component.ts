@@ -8,11 +8,14 @@ import {NzMessageService} from 'ng-zorro-antd/message';
 import {CreateContainerFormComponent} from "../../_forms/create-form/create-container-form.component";
 import {Container} from "../../_models/container";
 import {NzSafeAny} from "ng-zorro-antd/core/types";
+import {ModalBuilderService} from "../../_services/modal-builder.service";
+import {CreateShipFormComponent} from "../../_forms/create-form/create-ship-form.component";
 
 @Component({
   selector: 'app-containers',
   templateUrl: './containers.component.html',
-  styleUrls: ['./containers.component.css']
+  styleUrls: ['./containers.component.css'],
+  providers: [ModalBuilderService]
 })
 export class ContainersComponent implements OnInit {
 
@@ -21,9 +24,10 @@ export class ContainersComponent implements OnInit {
   isLoading = false
 
   constructor(private message: NzMessageService,
-              private modal: NzModalService,
-              private viewContainerRef: ViewContainerRef,
-              private apiService: ApiService) {
+              private apiService: ApiService,
+              private modalBuilder: ModalBuilderService,
+              viewContainerRef: ViewContainerRef) {
+    modalBuilder.init(viewContainerRef)
   }
 
   async ngOnInit() {
@@ -33,40 +37,21 @@ export class ContainersComponent implements OnInit {
   }
 
   showCreateModal(): void {
-    const modal = this.modal.create<CreateContainerFormComponent>({
-      nzTitle: 'Create Container',
-      nzWidth: '250px',
-      nzContent: CreateContainerFormComponent,
-      nzViewContainerRef: this.viewContainerRef,
-      nzFooter: [
-        {
-          label: 'Cancel',
-          onClick(): NzSafeAny | Promise<NzSafeAny> {
-            modal.destroy();
-          }
-        },
-        {
-          label: 'Save',
-          onClick: async (componentInstance: CreateContainerFormComponent) =>  {
-            const isValid = componentInstance.validateForm();
-            if (!isValid)
-              return;
 
-            const request = componentInstance.prepareForApi();
-            await this.apiService
-              .addContainer(request)
-              .then((containerId) => {
-                this.message.create('success', `The container has been created!`);
-                this.addToList({ id: +containerId, name: request.name })
-                modal.destroy();
-              })
-              .catch(e => {
-                this.message.error(e.error.message)
-              })
-          }
-        }
-      ]
-    });
+    const onSave = async (componentInstance: CreateContainerFormComponent) =>  {
+      if (!componentInstance.isValid())
+        return;
+
+      const request = componentInstance.prepareForApi();
+      return this.apiService
+        .addContainer(request)
+        .then((containerId) => {
+          this.message.create('success', `The container has been created!`);
+          this.addToList({ id: +containerId, name: request.name })
+        })
+    }
+
+    this.modalBuilder.showModal('Create Container', CreateContainerFormComponent, onSave, null, '250px')
   }
 
   private addToList(item: Container) {

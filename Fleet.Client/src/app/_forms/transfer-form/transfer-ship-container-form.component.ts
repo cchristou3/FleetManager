@@ -95,7 +95,7 @@ export class TransferShipContainerFormComponent {
     this.selectedShipContainers = selectedShipContainers;
   }
 
-  validateForm() {
+  isValid() {
     if (this.transferForm.valid)
       return true;
 
